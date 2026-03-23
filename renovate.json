@@ -1,0 +1,31 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base"],
+  "dockerfile": {
+    "enabled": true
+  },
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["golang"],
+      "automerge": true,
+      "automergeType": "branch"
+    },
+    {
+      "matchDatasources": ["github-tags"],
+      "matchPackageNames": ["libbpf/bpftool"],
+      "automerge": true,
+      "automergeType": "branch"
+    }
+  ],
+  "regexManagers": [
+    {
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "ARG BPFTOOL_VERSION=(?<currentValue>v[\\d.]+)"
+      ],
+      "depNameTemplate": "libbpf/bpftool",
+      "datasourceTemplate": "github-tags"
+    }
+  ]
+}
