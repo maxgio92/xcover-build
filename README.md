@@ -11,18 +11,29 @@ Based on `golang:bookworm` with the full BPF toolchain pre-installed:
 
 ## Usage
 
-```
-ghcr.io/maxgio92/xcover-build:latest
-```
-
-### Runtime requirement
-
-`/sys/kernel/btf/vmlinux` must be bind-mounted from the host so bpftool can
-generate `vmlinux.h` at build time:
+From the xcover repo root:
 
 ```sh
-docker run -v /sys/kernel/btf:/sys/kernel/btf:ro ghcr.io/maxgio92/xcover-build:latest
+docker run --rm -it \
+  --user $(id -u):$(id -g) \
+  -e GOCACHE=/workspace/.cache/go-build \
+  -v /sys/kernel/btf:/sys/kernel/btf:ro \
+  -v $PWD:/workspace \
+  -w /workspace \
+  ghcr.io/maxgio92/xcover-build:latest sh
 ```
+
+Then inside the container:
+
+```sh
+make xcover
+```
+
+### Notes
+
+- `--user $(id -u):$(id -g)` runs as your host uid so bind-mounted files are writable.
+- `-e GOCACHE=/workspace/.cache/go-build` gives Go a writable cache directory.
+- `/sys/kernel/btf` must be bind-mounted from the host so bpftool can generate `vmlinux.h`.
 
 ## Updates
 
