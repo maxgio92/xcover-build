@@ -15,8 +15,26 @@ permissions:
 
 jobs:
   build:
-    name: Build
+    name: Build (${{ matrix.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: kernel
+            dockerfile: Dockerfile
+            tag: latest
+            cache-scope: kernel
+            xcover-ref: main
+            pr-branch: chore/bump-xcover-build-digest
+            pr-title: "chore: bump xcover-build digest"
+          - name: userspace
+            dockerfile: Dockerfile.usermode
+            tag: userspace
+            cache-scope: userspace
+            xcover-ref: xcover-userspace
+            pr-branch: chore/bump-xcover-build-userspace-digest
+            pr-title: "chore: bump xcover-build userspace digest"
 
     permissions:
       contents: read
@@ -42,12 +60,13 @@ jobs:
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
+          file: ${{ matrix.dockerfile }}
           push: true
           no-cache: ${{ github.event_name == 'schedule' }}
           tags: |
-            ghcr.io/maxgio92/xcover-build:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            ghcr.io/maxgio92/xcover-build:${{ matrix.tag }}
+          cache-from: type=gha,scope=${{ matrix.cache-scope }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.cache-scope }}
 
       - name: Get token
         id: token
@@ -60,6 +79,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           repository: maxgio92/xcover
+          ref: ${{ matrix.xcover-ref }}
           token: ${{ steps.token.outputs.token }}
           path: xcover
 
@@ -72,12 +92,12 @@ jobs:
         with:
           token: ${{ steps.token.outputs.token }}
           path: xcover
-          commit-message: "chore: bump xcover-build digest"
-          title: "chore: bump xcover-build digest"
+          commit-message: ${{ matrix.pr-title }}
+          title: ${{ matrix.pr-title }}
           body: |
             New digest: `${{ steps.build.outputs.digest }}`
 
             /cc @maxgio92
-          branch: chore/bump-xcover-build-digest
+          branch: ${{ matrix.pr-branch }}
           delete-branch: true
-          base: main
+          base: ${{ matrix.xcover-ref }}
