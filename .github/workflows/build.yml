@@ -32,7 +32,7 @@ jobs:
             dockerfile: Dockerfile.usermode
             tag: userspace
             cache-scope: userspace
-            xcover-ref: xcover-userspace
+            xcover-ref: userspace
             pr-branch: chore/bump-xcover-build-userspace-digest
             pr-title: "chore: bump xcover-build userspace digest"
 
